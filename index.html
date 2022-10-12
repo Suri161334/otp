@@ -1,0 +1,261 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Number verification with OTP</title>
+
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+		crossorigin="anonymous"></script>
+
+
+	<link rel="stylesheet" type="text/css"
+		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+		integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css"
+		integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+
+	<style>
+		.container {
+			/* width: 302%; */
+			/* height: 175px; */
+			position: absolute;
+			left: 0px;
+			right: 0px;
+			top: 0px;
+			bottom: 0px;
+			margin: auto;
+		}
+
+		#number, #verificationcode {
+			width: calc(100% - 24px);
+			padding: 10px;
+			font-size: 20px;
+			margin-bottom: 5px;
+			outline: none;
+		}
+
+		#recaptcha-container {
+			margin-bottom: 5px;
+		}
+
+		#send, #verify {
+			width: 100%;
+			height: 40px;
+			outline: none;
+		}
+
+		.p-conf, .n-conf {
+			width: calc(100% - 22px);
+			border: 2px solid green;
+			border-radius: 4px;
+			padding: 8px 10px;
+			margin: 4px 0px;
+			background-color: rgba(0, 249, 12, 0.5);
+			display: none;
+		}
+
+		.n-conf {
+			border-color: red;
+			background-color: rgba(255, 0, 4, 0.5);
+		}
+
+		/*-------------------------------------*/
+		.main{
+			/* margin-top: 50px; */
+			
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+		.image_1{
+			width: 30%;
+			height: 30%;
+
+		}
+		.logo {
+			text-align: center;
+		}
+		#send {
+			background-color: rgb(49, 49, 241);
+			color: aliceblue;
+			border: none;
+			border-radius: 10px;
+		}
+		#verify{
+			
+			background-color: rgb(49, 49, 241);
+			color: aliceblue;
+			border: none;
+			border-radius: 10px;
+		}
+		#sender input{
+			width: 100%;
+		}
+		@media screen and (max-width: 426px){
+			.logo{
+				margin-left: 20px;
+			}
+			.image_1{
+				width: 100%;
+			}
+		}
+		@media screen and (max-width:321px){
+			.image_1{
+				width: 100%;
+			}
+		}
+
+		
+		
+	</style>
+</head>
+
+<body>
+	<form>
+		<div class="container">
+			<div class="main mt-5">
+				<h1 class="logo mt-5" style="font-size: 50px;">LoyalTbs</h1>
+				<img class="image_1 mt-4" src="interior-design.png" alt="img" width="40%" height="350px">
+				<div id="sender">
+					<input type="text" id="number" placeholder="+91" value="+91" class="mt-4">
+					<div id="recaptcha-container"></div>
+					<input type="button" id="send" value="Send OTP" onClick="phoneAuth()">
+				</div>
+
+				<div id="verifier" style="display: none;">
+					<img src="./images/output-onlinegiftools-1--unscreen.gif" class="card-img-top images_2" alt="img-1">
+					<h5 class="card-title text-center">OTP VERIFICATION</h5>
+					<input type="text" id="verificationcode" placeholder="Enter OTP">
+					<input type="button" id="verify" value="Verify OTP" onClick="codeverify()" class="mt-3">
+				
+
+					<div class="main_send mt-3">
+						<div class="options">
+							<input type="button" onClick="phoneAuth()" id="send" value="Resend opt">
+						</div>
+						<div class="time">Time left = <span id="timer"></span></div>
+					</div>
+				</div>
+				<div class="p-conf">Login Successfully</div>
+				<div class="n-conf">OTP ERROR</div>
+			</div>
+		</div>
+	</form>
+	<!--	add firebase SDK-->
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase.js"></script>
+	<!-- <script src="https://www.gstatic.com/firebasejs/6.0.2/firebase.js"></script> -->
+	<script>
+		// import { initializeApp } from "https://www.gstatic.com/firebasejs/9.11.0/firebase.js";
+		// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+		const firebaseConfig = {
+			apiKey: "AIzaSyDkHVG-2_NdeUQNpjwRvTqbL-22mI5XxBw",
+			authDomain: "otpverification-89153.firebaseapp.com",
+			databaseURL: "https://otpverification-89153-default-rtdb.firebaseio.com",
+			projectId: "otpverification-89153",
+			storageBucket: "otpverification-89153.appspot.com",
+			messagingSenderId: "714057130441",
+			appId: "1:714057130441:web:adc82a86b5a92d5a320818"
+		};
+
+		firebase.initializeApp(firebaseConfig);
+		render();
+		function render() {
+			window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
+			recaptchaVerifier.render();
+		}
+		// function for send message
+		function phoneAuth() {
+			var number = document.getElementById('number').value;
+			firebase.auth().signInWithPhoneNumber(number, window.recaptchaVerifier).then(function (confirmationResult) {
+				window.confirmationResult = confirmationResult;
+				coderesult = confirmationResult;
+				document.getElementById('sender').style.display = 'none';
+				document.getElementById('verifier').style.display = 'block';
+				alert('Message Sent')
+			})
+				.catch(function (error) {
+					alert(error.message);
+				});
+		}
+
+		// function for code verify
+		function codeverify() {
+			var code = document.getElementById('verificationcode').value;
+			coderesult.confirm(code).then(function () {
+				alert("Your registred successfully ")
+				// document.getElementsByClassName('p-conf')[0].style.display = 'block';
+				// document.getElementsByClassName('n-conf')[0].style.display = 'none';
+				window.location.href = "./home.html"
+			}).catch(function () {
+				document.getElementsByClassName('p-conf')[0].style.display = 'none';
+				document.getElementsByClassName('n-conf')[0].style.display = 'block';
+			})
+		}
+
+
+		//--------------Resend-OTP-------------------//
+		let timerOn = true;
+
+		function timer(remaining) {
+			var m = Math.floor(remaining / 60);
+			var s = remaining % 60;
+
+			m = m < 10 ? '0' + m : m;
+			s = s < 10 ? '0' + s : s;
+			document.getElementById('timer').innerHTML = m + ':' + s;
+			remaining -= 1;
+
+			document.getElementById('send').addEventListener('click', function () {
+				document.getElementsByClassName('time')[0].style.display = 'block';
+				timer(30);
+
+			});
+			function phoneAuth() {
+				var number = document.getElementById('number').value;
+				firebase.auth().signInWithPhoneNumber(number, window.recaptchaVerifier).then(function (confirmationResult) {
+					window.confirmationResult = confirmationResult;
+					coderesult = confirmationResult;
+					document.getElementById('sender').style.display = 'none';
+					document.getElementById('verifier').style.display = 'block';
+					alert('Message Sent')
+				})
+					.catch(function (error) {
+						alert(error.message);
+					});
+
+
+				if (remaining >= 0 && timerOn) {
+					setTimeout(function () {
+						timer(remaining);
+
+
+					}, 1000);
+					return;
+				}
+
+				if (!timerOn) {
+				}
+
+				//document.getElementById('Send_Active').setAttribute('hidden', true);                
+
+				// Do timeout stuff here
+
+			}
+			document.getElementsByClassName('time')[0].style.display = 'none';
+		}
+		timer(30);
+//----------------------END-Resend-OTP------------------//
+
+
+	</script>
+</body>
+
+</html>
